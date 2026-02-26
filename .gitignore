@@ -1,0 +1,16 @@
+# Ignore dataset folder
+Dataset/
+
+# Ignore CSV files
+*.csv
+
+# Ignore model files
+Model/
+*.save
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
