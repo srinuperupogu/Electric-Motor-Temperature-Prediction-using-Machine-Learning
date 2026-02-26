@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Electric Motor Temperature Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+        .container {
+            width: 450px;
+            margin: 60px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h2>Electric Motor<br>Temperature Prediction</h2>
+
+    <label>Ambient Temperature</label>
+    <input type="number" id="ambient" step="any">
+
+    <label>Coolant Temperature</label>
+    <input type="number" id="coolant" step="any">
+
+    <label>Ud Voltage</label>
+    <input type="number" id="u_d" step="any">
+
+    <label>Uq Voltage</label>
+    <input type="number" id="u_q" step="any">
+
+    <label>Motor Speed (RPM)</label>
+    <input type="number" id="motor_speed" step="any">
+
+    <label>Id Current</label>
+    <input type="number" id="i_d" step="any">
+
+    <label>Iq Current</label>
+    <input type="number" id="i_q" step="any">
+
+    <button onclick="predict()">Predict Temperature</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+function predict() {
+    const data = {
+        ambient: parseFloat(document.getElementById("ambient").value),
+        coolant: parseFloat(document.getElementById("coolant").value),
+        u_d: parseFloat(document.getElementById("u_d").value),
+        u_q: parseFloat(document.getElementById("u_q").value),
+        motor_speed: parseFloat(document.getElementById("motor_speed").value),
+        i_d: parseFloat(document.getElementById("i_d").value),
+        i_q: parseFloat(document.getElementById("i_q").value)
+    };
+
+    fetch("/predict", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+
+        if (result.error) {
+            document.getElementById("result").innerHTML =
+                "<span style='color:red;'>Error: " + result.error + "</span>";
+            return;
+        }
+
+        const temp = result.pm_temperature_prediction;
+        let status = "";
+        let color = "";
+
+        if (temp <= 60) {
+            status = "Normal";
+            color = "green";
+        } 
+        else if (temp <= 90) {
+            status = "Medium";
+            color = "orange";
+        } 
+        else {
+            status = "Danger";
+            color = "red";
+        }
+
+        document.getElementById("result").innerHTML = `
+            <table border="1" style="width:100%; margin-top:15px; border-collapse:collapse;">
+                <tr style="background:#f2f2f2;">
+                    <th>Predicted Temperature (°C)</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td style="text-align:center; font-weight:bold;">
+                        ${temp.toFixed(2)}
+                    </td>
+                    <td style="text-align:center; font-weight:bold; color:${color};">
+                        ${status}
+                    </td>
+                </tr>
+            </table>
+        `;
+    })
+    .catch(error => {
+        document.getElementById("result").innerHTML =
+            "<span style='color:red;'>Server error</span>";
+    });
+}
+</script>
+
+</body>
+</html>
